@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>formatDuration — skill-model-router</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      /* Type */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Menlo", "Consolas", monospace;
+
+      /* Light palette */
+      --bg: #f6f6f7;
+      --bg-grad: radial-gradient(140% 100% at 50% -20%, #ffffff 0%, #f2f2f4 55%, #ededf0 100%);
+      --surface: #ffffff;
+      --surface-2: #fafafb;
+      --border: rgba(17, 18, 23, 0.08);
+      --border-strong: rgba(17, 18, 23, 0.14);
+      --text: #16171d;
+      --text-muted: #5b5d67;
+      --text-faint: #8a8c96;
+      --accent: #5b53f0;
+      --accent-soft: rgba(91, 83, 240, 0.10);
+      --accent-ring: rgba(91, 83, 240, 0.28);
+      --danger: #d3372b;
+      --danger-soft: rgba(211, 55, 43, 0.08);
+      --track: rgba(17, 18, 23, 0.10);
+      --shadow: 0 1px 2px rgba(17, 18, 23, 0.04), 0 12px 40px -12px rgba(17, 18, 23, 0.16);
+      --result-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0c0f;
+        --bg-grad: radial-gradient(140% 100% at 50% -20%, #17181e 0%, #0f1014 55%, #0a0b0e 100%);
+        --surface: #131419;
+        --surface-2: #17181e;
+        --border: rgba(255, 255, 255, 0.07);
+        --border-strong: rgba(255, 255, 255, 0.13);
+        --text: #f0f0f3;
+        --text-muted: #a4a6b2;
+        --text-faint: #6f717c;
+        --accent: #8b84ff;
+        --accent-soft: rgba(139, 132, 255, 0.14);
+        --accent-ring: rgba(139, 132, 255, 0.34);
+        --danger: #ff6a5c;
+        --danger-soft: rgba(255, 106, 92, 0.10);
+        --track: rgba(255, 255, 255, 0.12);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+        --result-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--text);
+      background: var(--bg);
+      background-image: var(--bg-grad);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(1.25rem, 5vw, 4rem) 1.25rem;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 34rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    header { margin-bottom: 2.25rem; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.32rem 0.66rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      margin-bottom: 1.15rem;
+    }
+    .eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 640;
+      letter-spacing: -0.028em;
+      line-height: 1.08;
+    }
+    h1 code {
+      font-family: var(--font-mono);
+      font-weight: 640;
+      font-size: 0.92em;
+      color: var(--accent);
+    }
+
+    .lede {
+      margin: 0.9rem 0 0;
+      font-size: 1.02rem;
+      color: var(--text-muted);
+      max-width: 30rem;
+      letter-spacing: -0.006em;
+    }
+    .lede code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      padding: 0.08em 0.34em;
+      border-radius: 5px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    /* ---- Card ---- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: clamp(1.35rem, 4vw, 1.9rem);
+    }
+
+    /* ---- Result display ---- */
+    .result {
+      position: relative;
+      border-radius: 13px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      box-shadow: var(--result-shadow);
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .result-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 0.9rem;
+    }
+
+    .result-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(1.9rem, 8vw, 2.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text);
+      min-height: 1.1em;
+      word-break: break-word;
+      transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+                  color 220ms ease;
+    }
+    .result-value .seg + .seg { margin-left: 0.42em; }
+    .result-value .unit { color: var(--text-faint); font-weight: 500; }
+
+    /* update pulse */
+    .result-value.is-updating {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    /* error state */
+    .result.is-error {
+      border-color: rgba(211, 55, 43, 0.30);
+      background: var(--danger-soft);
+    }
+    .result.is-error .result-value {
+      font-size: clamp(1rem, 4.5vw, 1.2rem);
+      font-weight: 500;
+      color: var(--danger);
+      letter-spacing: -0.01em;
+    }
+    .result-error-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .result-error-inner svg { flex: none; }
+
+    /* ---- Controls ---- */
+    .controls { margin-top: 1.6rem; }
+
+    .field-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+    }
+    label.field-label {
+      font-size: 0.82rem;
+      font-weight: 550;
+      color: var(--text-muted);
+      letter-spacing: -0.003em;
+    }
+    .field-hint {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    .number-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    input[type="number"] {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 1.05rem;      /* >=16px avoids iOS zoom */
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 11px;
+      padding: 0.82rem 3.4rem 0.82rem 0.95rem;
+      appearance: textfield;
+      -moz-appearance: textfield;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-ring);
+      background: var(--surface);
+    }
+    input[type="number"].is-error {
+      border-color: rgba(211, 55, 43, 0.55);
+    }
+    input[type="number"].is-error:focus {
+      box-shadow: 0 0 0 4px var(--danger-soft);
+    }
+    .unit-suffix {
+      position: absolute;
+      right: 0.95rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+
+    /* slider */
+    .slider-row { margin-top: 1.35rem; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 24px;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill, 0%), var(--track) var(--fill, 0%), var(--track) 100%);
+    }
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--track);
+    }
+    input[type="range"]::-moz-range-progress {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px; height: 18px;
+      margin-top: -6px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      transition: transform 130ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 130ms ease;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    }
+    input[type="range"]:focus-visible::-webkit-slider-thumb {
+      box-shadow: 0 0 0 5px var(--accent-ring);
+    }
+    input[type="range"]:focus-visible::-moz-range-thumb {
+      box-shadow: 0 0 0 5px var(--accent-ring);
+    }
+    @media (hover: hover) {
+      input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.12); }
+    }
+    .slider-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-faint);
+    }
+
+    /* preset chips */
+    .presets {
+      margin-top: 1.7rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .presets-label {
+      font-size: 0.72rem;
+      font-weight: 550;
+      letter-spacing: 0.02em;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0.42rem 0.7rem;
+      cursor: pointer;
+      transition: border-color 140ms ease, color 140ms ease, background 140ms ease, transform 100ms ease;
+    }
+    .chip:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+    .chip:active { transform: translateY(1px); }
+    @media (hover: hover) {
+      .chip:hover {
+        color: var(--accent);
+        border-color: var(--border-strong);
+        background: var(--accent-soft);
+      }
+    }
+    .chip b { color: var(--text); font-weight: 600; }
+    @media (prefers-color-scheme: dark) {
+      .chip b { color: var(--text); }
+    }
+
+    /* footer */
+    footer {
+      margin-top: 1.9rem;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+    footer code {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+      }
+      .result-value.is-updating { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <span class="eyebrow"><span class="dot"></span>skill-model-router</span>
+      <h1><code>formatDuration()</code></h1>
+      <p class="lede">Turn a raw millisecond count into a human-readable duration. Type a value or drag the slider — for example <code>3725000</code> becomes <code>1h&nbsp;2m&nbsp;5s</code>.</p>
+    </header>
+
+    <section class="card" aria-label="Interactive formatDuration demo">
+      <div class="result" id="result">
+        <div class="result-label">Formatted output</div>
+        <div class="result-value" id="resultValue" role="status" aria-live="polite">0s</div>
+      </div>
+
+      <div class="controls">
+        <div class="field-head">
+          <label class="field-label" for="msInput">Milliseconds</label>
+          <span class="field-hint" id="msHint">1 s = 1000 ms</span>
+        </div>
+        <div class="number-wrap">
+          <input
+            type="number"
+            id="msInput"
+            inputmode="numeric"
+            step="1000"
+            min="0"
+            value="3725000"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="msHint">
+          <span class="unit-suffix">ms</span>
+        </div>
+
+        <div class="slider-row">
+          <input
+            type="range"
+            id="msSlider"
+            min="0"
+            max="7200000"
+            step="1000"
+            value="3725000"
+            aria-label="Duration in milliseconds">
+          <div class="slider-scale">
+            <span>0</span>
+            <span>1h</span>
+            <span>2h</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="presets">
+        <div class="presets-label">Try a value</div>
+        <div class="chips" id="chips">
+          <button class="chip" type="button" data-ms="5000"><b>5,000</b> ms</button>
+          <button class="chip" type="button" data-ms="125000"><b>125,000</b> ms</button>
+          <button class="chip" type="button" data-ms="3725000"><b>3,725,000</b> ms</button>
+          <button class="chip" type="button" data-ms="3605000"><b>3,605,000</b> ms</button>
+          <button class="chip" type="button" data-ms="400"><b>400</b> ms</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Faithful inline copy of <code>src/format.js</code> · negative input throws, and is shown as an error state.
+    </footer>
+  </main>
+
+  <script>
+    // --- Faithful copy of src/format.js -------------------------------------
+    function formatDuration(ms) {
+      if (ms < 0) {
+        throw new Error('duration must not be negative');
+      }
+
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const parts = [];
+      if (hours > 0) parts.push(`${hours}h`);
+      if (minutes > 0) parts.push(`${minutes}m`);
+      if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+
+      return parts.join(' ');
+    }
+    // ------------------------------------------------------------------------
+
+    const input = document.getElementById('msInput');
+    const slider = document.getElementById('msSlider');
+    const result = document.getElementById('result');
+    const resultValue = document.getElementById('resultValue');
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Render "1h 2m 5s" with each numeric segment split from its unit for
+    // subtle styling. Purely presentational; the text still reads correctly.
+    function decorate(formatted) {
+      return formatted
+        .split(' ')
+        .map(function (seg) {
+          const m = seg.match(/^(\d+)([a-z]+)$/);
+          if (!m) return '<span class="seg">' + seg + '</span>';
+          return '<span class="seg">' + m[1] + '<span class="unit">' + m[2] + '</span></span>';
+        })
+        .join(' ');
+    }
+
+    const errorIcon =
+      '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+      '<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>' +
+      '<path d="M8 4.5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<circle cx="8" cy="11" r="0.9" fill="currentColor"/></svg>';
+
+    function paint(html, isError) {
+      result.classList.toggle('is-error', !!isError);
+      input.classList.toggle('is-error', !!isError);
+      resultValue.innerHTML = html;
+    }
+
+    function compute(raw) {
+      const trimmed = String(raw).trim();
+
+      if (trimmed === '') {
+        return { error: true, message: 'Enter a millisecond value' };
+      }
+
+      const value = Number(trimmed);
+      if (!Number.isFinite(value)) {
+        return { error: true, message: 'Not a valid number' };
+      }
+
+      try {
+        return { error: false, text: formatDuration(value) };
+      } catch (err) {
+        // Mirrors src/format.js: negative durations throw.
+        return { error: true, message: 'Duration must not be negative' };
+      }
+    }
+
+    function render(raw) {
+      const outcome = compute(raw);
+      const html = outcome.error
+        ? '<span class="result-error-inner">' + errorIcon + '<span>' + outcome.message + '</span></span>'
+        : decorate(outcome.text);
+
+      if (prefersReduced) {
+        paint(html, outcome.error);
+        return;
+      }
+
+      // Subtle out/in transition when the displayed result changes.
+      resultValue.classList.add('is-updating');
+      window.setTimeout(function () {
+        paint(html, outcome.error);
+        // next frame -> animate back in
+        requestAnimationFrame(function () {
+          resultValue.classList.remove('is-updating');
+        });
+      }, 110);
+    }
+
+    function setSliderFill() {
+      const min = Number(slider.min);
+      const max = Number(slider.max);
+      const val = Number(slider.value);
+      const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+      slider.style.setProperty('--fill', pct + '%');
+    }
+
+    // input (number field) is the source of truth for display.
+    input.addEventListener('input', function () {
+      const val = Number(input.value);
+      if (Number.isFinite(val) && val >= 0) {
+        // keep slider in sync within its range
+        slider.value = Math.min(val, Number(slider.max));
+        setSliderFill();
+      }
+      render(input.value);
+    });
+
+    slider.addEventListener('input', function () {
+      input.value = slider.value;
+      setSliderFill();
+      render(slider.value);
+    });
+
+    document.getElementById('chips').addEventListener('click', function (e) {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      const ms = chip.getAttribute('data-ms');
+      input.value = ms;
+      const val = Number(ms);
+      slider.value = Math.min(val, Number(slider.max));
+      setSliderFill();
+      render(ms);
+    });
+
+    // initial paint (no animation)
+    setSliderFill();
+    paint(decorate(formatDuration(Number(input.value))), false);
+  </script>
+</body>
+</html>
