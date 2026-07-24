@@ -12,9 +12,10 @@ Why this skill exists: subagents inherit the orchestrator's model by default, so
 ## Per-task checklist
 
 1. **Bypass?** If the task is a single edit in one place (one-liner, typo, trivial config value), the orchestrator does it inline. No subagent, no review loop. Anything that touches multiple files or needs a search across the codebase is not a bypass — mechanical multi-file work is Tier 1, not orchestrator work.
-2. **Model tier** — see table. Set it with the Agent tool's `model` parameter.
-3. **Brief** — subagents start cold. Include: exact file paths or code, codebase conventions and constraints, the plan slice (why this task exists), an explicit blast radius (files it may touch), acceptance criteria, and a verification command to run and report. A thin brief is an orchestrator failure.
-4. **Review on return** — read the diff, re-run the verification yourself, judge against the criteria. No rubber-stamping.
+2. **Keep?** If success will be judged by the user's eye against a reference — implementing a specific design (Figma, mockup, screenshot), matching a visual or tonal target — the orchestrator does the work itself. There is no verification command a subagent can run, so every feedback round pays a user → orchestrator → subagent translation and loses fidelity. Delegate only self-contained slices with checkable criteria (extract the design tokens, build the test harness), not the fidelity-judged whole. This is about matching a reference the user holds; generative design work from a brief still routes per the table.
+3. **Model tier** — see table. Set it with the Agent tool's `model` parameter.
+4. **Brief** — subagents start cold. Include: exact file paths or code, codebase conventions and constraints, the plan slice (why this task exists), an explicit blast radius (files it may touch), acceptance criteria, and a verification command to run and report. A thin brief is an orchestrator failure.
+5. **Review on return** — read the diff, re-run the verification yourself, judge against the criteria. No rubber-stamping.
 
 ## Routing table
 
@@ -37,9 +38,10 @@ There are no specialist agent types. A "specialist" is a role stated in the brie
 
 1. On failure, check the brief first. Thin brief → fix it and resend, same tier; doesn't count against the ladder.
 2. Real failure → reject ONCE back to the same agent (follow-up message to the same session, so it keeps its context) with specifics: what's wrong, where, what passing looks like.
-3. Still failing → escalate one tier. Never a third same-tier attempt.
-4. Tier 4 failure = underspecified task. Stop and clarify with the user.
-5. Only reviewed work lands. If the orchestrator keeps repairing a tier's output — even small touch-ups it would rather make than bounce — that task class moves up a tier for the session, and the orchestrator says so.
+3. Still failing → escalate one tier. Never a third same-tier attempt. Escalating past Tier 3 means the orchestrator takes the task itself — not a top-model subagent.
+4. A user rejection of delegated work is a failure on this ladder — it counts, it never resets. The second time the orchestrator relays user feedback to a subagent on the same task, delegation stops: the orchestrator takes the task for the rest of the session and says so.
+5. Tier 4 failure = underspecified task. Stop and clarify with the user.
+6. Only reviewed work lands. If the orchestrator keeps repairing a tier's output — even small touch-ups it would rather make than bounce — that task class moves up a tier for the session, and the orchestrator says so.
 
 Escalate immediately (skip the retry) if a subagent ignores stated constraints or edits outside its blast radius.
 
