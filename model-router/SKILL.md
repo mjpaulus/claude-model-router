@@ -14,7 +14,7 @@ Why this skill exists: subagents inherit the orchestrator's model by default, so
 1. **Bypass?** If the task is a single edit in one place (one-liner, typo, trivial config value), the orchestrator does it inline. No subagent, no review loop. Anything that touches multiple files or needs a search across the codebase is not a bypass — mechanical multi-file work is Tier 1, not orchestrator work.
 2. **Keep?** If success will be judged by the user's eye against a reference — implementing a specific design (Figma, mockup, screenshot), matching a visual or tonal target — the orchestrator does the work itself. There is no verification command a subagent can run, so every feedback round pays a user → orchestrator → subagent translation and loses fidelity. Delegate only self-contained slices with checkable criteria (extract the design tokens, build the test harness), not the fidelity-judged whole. This is about matching a reference the user holds; generative design work from a brief still routes per the table.
 3. **Model tier** — see table. Set it with the Agent tool's `model` parameter.
-4. **Brief** — subagents start cold. Include: exact file paths or code, codebase conventions and constraints, the plan slice (why this task exists), an explicit blast radius (files it may touch), acceptance criteria, and a verification command to run and report. A thin brief is an orchestrator failure.
+4. **Brief** — subagents start cold. Include: exact file paths or code, codebase conventions and constraints, the plan slice (why this task exists), an explicit blast radius (files it may touch), acceptance criteria, and a verification command to run and report. A thin brief is an orchestrator failure. For design-quality briefs, name the specific default patterns to avoid (cream backgrounds, italic accent words in headlines, "01/02/03" section labels, pill-shaped buttons, and whatever the last attempt fell back on); a generic "avoid the AI look" instruction just swaps one default for another.
 5. **Review on return** — read the diff, re-run the verification yourself, judge against the criteria. No rubber-stamping.
 
 ## Routing table
@@ -28,7 +28,7 @@ Why this skill exists: subagents inherit the orchestrator's model by default, so
 
 Signals: crisp spec, small blast radius, verifiable by tests, existing pattern to copy → lower. Ambiguous, wide, silent-failure-prone, novel → higher. Mixed task → decompose and route the pieces. **No test suite covering the code? Treat verifiability as low: route one tier up, or have a test agent build the net first.**
 
-Effort/thinking budget is not settable per subagent on the Agent tool — do not plan or report effort routing there. Per-agent effort exists only inside Workflow runs (`agent()`'s `effort` option); use it when a Workflow is already justified, and route by model alone otherwise.
+Effort/thinking budget is not settable on an ad-hoc Agent call — do not plan or report effort routing there. Effort can be pinned only where an agent definition exists (a custom subagent's frontmatter in `.claude/agents/*.md`, or `agent()`'s `effort` option inside a Workflow run). This skill defines no agent types, so route by model alone. Note that current Opus defaults to `medium` effort at the API where older Opus defaulted to `high`; if Tier 3 output reads as under-thought, check the effective effort before concluding the tier can't do the work.
 
 ## Specialists are briefs, not agent types
 
@@ -49,11 +49,11 @@ Batch same-tier follow-up work into the same agent session with a follow-up mess
 
 ## Mock agent (design decision support)
 
-When the user is stuck on a design decision, offer 2–3 disposable variants from a Tier 2 mock agent (Tier 1 for rough structure) so they compare options instead of approving in the abstract. Review asks only: does each mock faithfully represent its option? Route the real implementation normally afterward; promote a mock to a starting point only if structurally sound.
+When the user is stuck on a design decision, offer 2–3 disposable variants from a Tier 2 mock agent (Tier 1 for rough structure) so they compare options instead of approving in the abstract. Brief each variant with the specific patterns it must avoid, not a generic "don't look generic". Review asks only: does each mock faithfully represent its option? Route the real implementation normally afterward; promote a mock to a starting point only if structurally sound.
 
 ## Parallelism
 
-Spawn subagents in parallel only when their briefed file sets don't overlap; the orchestrator assigns disjoint blast radii in the briefs. Overlapping work runs in sequence.
+Spawn subagents in parallel only when their briefed file sets don't overlap; the orchestrator assigns disjoint blast radii in the briefs. Overlapping work runs in sequence. Subagents run in the background by default: keep working on orchestrator-owned tasks while they run, and don't block on the slowest one unless the next step depends on its result.
 
 ## User overrides
 
